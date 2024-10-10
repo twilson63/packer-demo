@@ -1,0 +1,12 @@
+# Packer Demo
+
+
+In this demo we use `gcloud`, `packer`, and `ansible` to create a gcp image, with nginx and erlang.
+
+## Requirements
+
+1. GCP Project with `gcloud` installed on host machine
+2. packer installed from hasicorp
+3. ansible installed on host machine
+
+

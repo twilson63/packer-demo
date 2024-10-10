@@ -1,0 +1,69 @@
+---
+- hosts: all
+  remote_user: ubuntu
+  become_method: sudo
+  become: true
+  vars:
+    erlang_version: "27.1"  # Set your desired Erlang version
+    install_dir: "/usr/local/src"
+  tasks:
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: latest
+   # Update the apt cache
+    - name: Update APT package cache
+      apt:
+        update_cache: yes
+
+    # Install dependencies needed to compile Erlang
+    - name: Install dependencies for Erlang
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - build-essential
+        - libssl-dev
+        - libncurses5-dev
+        - libncursesw5-dev
+        - libgl1-mesa-dev
+        - libglu1-mesa-dev
+        - libpng-dev
+        - libssh-dev
+        - unixodbc-dev
+        - xsltproc
+        - fop
+        - libxml2-utils
+
+    # Download Erlang source from GitHub or the official website
+    - name: Download Erlang source
+      get_url:
+        url: "https://github.com/erlang/otp/releases/download/OTP-{{ erlang_version }}/otp_src_{{ erlang_version }}.tar.gz"
+        dest: "{{ install_dir }}/otp_src_{{ erlang_version }}.tar.gz"
+        mode: 0755
+
+    # Extract Erlang source
+    - name: Extract Erlang source
+      ansible.builtin.unarchive:
+        src: "{{ install_dir }}/otp_src_{{ erlang_version }}.tar.gz"
+        dest: "{{ install_dir }}"
+        remote_src: yes
+
+    # Build and install Erlang from source
+    - name: Compile and install Erlang
+      shell: |
+        cd {{ install_dir }}/otp_src_{{ erlang_version }} && \
+        ./configure && \
+        make && \
+        sudo make install
+
+    # Verify the installation by checking the Erlang version
+    - name: Check Erlang version
+      command: erl -version
+      register: erlang_version_output
+      ignore_errors: yes
+
+    - name: Show Erlang version output
+      debug:
+        msg: "{{ erlang_version_output.stdout }}"
+
